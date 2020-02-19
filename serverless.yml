@@ -3,6 +3,7 @@ service:
 
 provider:
   name: aws
+  region: ap-northeast-1
   runtime: nodejs12.x
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
@@ -11,11 +12,11 @@ package:
   exclude:
     - ./**
   include:
-    - target/scala-2.13/lambda-opt.js
+    - target/scala-2.13/scalajs-bundler/main/lambda-opt-bundle.js
 
 functions:
   hello:
-    handler: target/scala-2.13/lambda-opt.handleRequest
+    handler: target/scala-2.13/scalajs-bundler/main/lambda-opt-bundle.Handler.handleRequest
     events:
       - http:
           method: get
