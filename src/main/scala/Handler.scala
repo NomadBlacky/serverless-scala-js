@@ -1,30 +1,31 @@
 import net.exoego.facade.aws_lambda._
-import sttp.client._
+import typings.typedRestClient.httpClientMod.HttpClient
+import upickle.default
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.Promise
-import scala.scalajs.js.annotation.{JSExportAll, JSExportTopLevel}
+import scala.scalajs.js.annotation.JSExportTopLevel
 
-@JSExportTopLevel("Handler")
-@JSExportAll
+case class HttpBinGetResponse(args: Map[String, String], headers: Map[String, String], origin: String, url: String)
+
+object HttpBinGetResponse {
+  implicit val jsonR: default.Reader[HttpBinGetResponse] = upickle.default.macroR[HttpBinGetResponse]
+}
+
 object Handler {
-  implicit val sttpBackend = FetchBackend()
-
-  // https://sttp.readthedocs.io/en/latest/backends/javascript/fetch.html#node-js
-  //private val g = scalajs.js.Dynamic.global
-  //g.fetch = g.require("node-fetch")
-  //g.require("abortcontroller-polyfill/dist/polyfill-patch-fetch")
-  //g.Headers = g.require("fetch-headers")
-
-  def handleRequest(
-      request: APIGatewayProxyEvent,
-      context: Context
-  ): Promise[APIGatewayProxyResult] = {
+  @JSExportTopLevel(name = "handler")
+  def handleRequest(request: APIGatewayProxyEventV2, context: Context): Promise[APIGatewayProxyResult] = {
+    println(js.JSON.stringify(request))
+    val pathParamsString = request.pathParameters.map(_.map { case (k, v) => s"$k=$v" }.mkString("&")).getOrElse("")
+    val client           = new HttpClient("foo")
     val future = for {
-      res <- quickRequest.get(uri"https://httpbin.org/get").send()
+      res        <- client.get(s"https://httpbin.org/get?${pathParamsString}").toFuture
+      body       <- res.readBody().toFuture
+      httpBinRes = upickle.default.read[HttpBinGetResponse](body)
     } yield {
-      APIGatewayProxyResult(200, res.body)
+      APIGatewayProxyResult(body = httpBinRes.toString, statusCode = 200)
     }
     future.toJSPromise
   }

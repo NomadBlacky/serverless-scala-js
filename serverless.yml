@@ -7,17 +7,18 @@ provider:
   runtime: nodejs12.x
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    NODE_OPTIONS: --enable-source-maps
 
 package:
   exclude:
     - ./**
   include:
-    - target/scala-2.13/scalajs-bundler/main/lambda-opt-bundle.js
+    - target/scala-2.13/scalajs-bundler/main/lambda-opt-bundle.js*
 
 functions:
   hello:
-    handler: target/scala-2.13/scalajs-bundler/main/lambda-opt-bundle.Handler.handleRequest
+    handler: target/scala-2.13/scalajs-bundler/main/lambda-opt-bundle.handler
     events:
-      - http:
+      - httpApi:
           method: get
-          path: hello
+          path: /hello
